@@ -75,31 +75,16 @@ class Program
 
         string contact;
 
-        while (true)
-        {
-            Console.Write("Contact Number: ");
-            contact = Console.ReadLine();
+while (true)
+{
+    Console.Write("Contact Number: ");
+    contact = Console.ReadLine();
 
-            bool valid = true;
+    if (contact.Length == 11 && contact.All(char.IsDigit))
+        break;
 
-            if (contact.Length != 11)
-                valid = false;
-
-            foreach (char c in contact)
-            {
-                if (!char.IsDigit(c))
-                {
-                    valid = false;
-                    break;
-                }
-            }
-
-            if (valid)
-                break;
-
-            Console.WriteLine("Invalid contact number. Must be exactly 11 digits.\n");
-        }
-
+    Console.WriteLine("Invalid contact number. Must be exactly 11 digits.\n");
+}
         Console.Write("Course: ");
         string course = Console.ReadLine();
 
