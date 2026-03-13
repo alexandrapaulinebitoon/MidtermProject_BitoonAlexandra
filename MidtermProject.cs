@@ -1,12 +1,10 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace StudentRecordSystem;
 class Program
 {
-    static string studentFile = "students.txt";
-    static string subjectFile = "subjects.txt";
-    static string gradeFile = "grades.txt";
+    static string recordFile = "records.txt";
 
     static void Main()
     {
@@ -14,7 +12,7 @@ class Program
         {
             Console.Clear();
             Console.WriteLine("╔═══════════════════════════════════════╗");
-            Console.WriteLine("║   ===== STUDENT RECORD SYSTEM =====   ║");   
+            Console.WriteLine("║   ===== STUDENT RECORD SYSTEM =====   ║");
             Console.WriteLine("║       1. Register Student             ║");
             Console.WriteLine("║       2. Enroll Student Subjects      ║");
             Console.WriteLine("║       3. Enter Grades                 ║");
@@ -82,12 +80,25 @@ class Program
             Console.Write("Contact Number: ");
             contact = Console.ReadLine();
 
-            if (contact.Length == 11 && contact.All(char.IsDigit))
+            bool valid = true;
+
+            if (contact.Length != 11)
+                valid = false;
+
+            foreach (char c in contact)
+            {
+                if (!char.IsDigit(c))
+                {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (valid)
                 break;
 
             Console.WriteLine("Invalid contact number. Must be exactly 11 digits.\n");
         }
-
 
         Console.Write("Course: ");
         string course = Console.ReadLine();
@@ -95,10 +106,10 @@ class Program
         Console.Write("Year: ");
         string year = Console.ReadLine();
 
-        string student = firstname + "," + lastname + "," + middleinitial + "," + birthdate + "," +
-                         age + "," + address + "," + contact + "," + course + "," + year;
+        string student = "STUDENT," + firstname + "," + lastname + "," + middleinitial + "," +
+                         birthdate + "," + age + "," + address + "," + contact + "," + course + "," + year;
 
-        File.AppendAllText(studentFile, student + Environment.NewLine);
+        File.AppendAllText(recordFile, student + Environment.NewLine);
 
         Console.WriteLine("\nStudent Registered Successfully!");
     }
@@ -106,39 +117,32 @@ class Program
     static void EnrollSubjects()
     {
         Console.Clear();
-        Console.WriteLine("=== ENROLL STUDENT SUBJECTS ===");
+        Console.WriteLine("=== ENROLL 9 SUBJECTS ===");
 
         string lastname = GetLettersOnly("Student Last Name");
 
-        Console.Write("Course ID: ");
-        string courseID = Console.ReadLine();
-
-        string[,] subjects = new string[9, 2]
+        if (!StudentExists(lastname))
         {
-        {"102A","Theo"},
-        {"104B","IT"},
-        {"101","Rizal"},
-        {"106A","IT"},
-        {"104A","GEC"},
-        {"103A","PE"},
-        {"102IT","COMP"},
-        {"104A","IT"},
-        {"105A","IT"}
-        };
-
-        for (int i = 0; i < 9; i++)
-        {
-            string subjectID = subjects[i, 0];
-            string subjectName = subjects[i, 1];
-
-            string record = lastname + "," + courseID + "," + subjectID + "," + subjectName;
-
-            File.AppendAllText(subjectFile, record + Environment.NewLine);
-
-            Console.WriteLine(subjectID + " - " + subjectName);
+            Console.WriteLine("\nStudent not found. Please register the student first.");
+            return;
         }
 
-        Console.WriteLine("\nAll 9 subjects automatically enrolled!");
+        for (int i = 1; i <= 9; i++)
+        {
+            Console.WriteLine("\nSubject " + i);
+
+            Console.Write("Subject ID: ");
+            string subID = Console.ReadLine();
+
+            Console.Write("Subject Name: ");
+            string subjectName = Console.ReadLine();
+
+            string record = "SUBJECT," + lastname + "," + subID + "," + subjectName;
+
+            File.AppendAllText(recordFile, record + Environment.NewLine);
+        }
+
+        Console.WriteLine("\nAll 9 subjects enrolled successfully!");
     }
 
     static void EnterGrades()
@@ -146,17 +150,23 @@ class Program
         Console.Clear();
         Console.WriteLine("=== ENTER GRADES ===");
 
-        string lastname = GetLettersOnly("Student Last Name");
+        string lname = GetLettersOnly("Student Last Name");
+
+        if (!StudentExists(lname))
+        {
+            Console.WriteLine("\nStudent not found. Please register the student first.");
+            return;
+        }
 
         Console.Write("Subject ID: ");
-        string subjectID = Console.ReadLine();
+        string subID = Console.ReadLine();
 
         Console.Write("Grade: ");
         string grade = Console.ReadLine();
 
-        string record = lastname + "," + subjectID + "," + grade;
+        string record = "GRADE," + lname + "," + subID + "," + grade;
 
-        File.AppendAllText(gradeFile, record + Environment.NewLine);
+        File.AppendAllText(recordFile, record + Environment.NewLine);
 
         Console.WriteLine("\nGrade Saved Successfully!");
     }
@@ -166,28 +176,48 @@ class Program
         Console.Clear();
         Console.WriteLine("=== SHOW STUDENT GRADES ===");
 
-        string lastname = GetLettersOnly("Enter Student Last Name");
+        string lname = GetLettersOnly("Enter Student Last Name");
 
         Console.WriteLine("\nSubjects and Grades:\n");
 
-        if (File.Exists(gradeFile))
+        if (File.Exists(recordFile))
         {
-            string[] lines = File.ReadAllLines(gradeFile);
+            string[] lines = File.ReadAllLines(recordFile);
 
             foreach (string line in lines)
             {
                 string[] data = line.Split(',');
 
-                if (data[0].ToLower() == lastname.ToLower())
+                if (data[0] == "GRADE" && data[1].ToLower() == lname.ToLower())
                 {
-                    Console.WriteLine("Subject ID: " + data[1] + " | Grade: " + data[2]);
+                    Console.WriteLine("Subject ID: " + data[2] + " | Grade: " + data[3]);
                 }
             }
         }
         else
         {
-            Console.WriteLine("No grades recorded.");
+            Console.WriteLine("No records found.");
         }
+    }
+
+    static bool StudentExists(string lastname)
+    {
+        if (!File.Exists(recordFile))
+            return false;
+
+        string[] lines = File.ReadAllLines(recordFile);
+
+        foreach (string line in lines)
+        {
+            string[] data = line.Split(',');
+
+            if (data[0] == "STUDENT" && data[2].ToLower() == lastname.ToLower())
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     static string GetLettersOnly(string fieldName)
